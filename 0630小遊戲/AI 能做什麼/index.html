@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI 能做什麼｜Claude + Antigravity</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #111113;
+      --panel: #1a1a1d;
+      --panel-soft: #222126;
+      --text: #f6efe6;
+      --muted: #c9bcae;
+      --accent: #f4a261;
+      --accent-2: #ffd166;
+      --line: rgba(244, 162, 97, 0.28);
+      --good: #79d0aa;
+      --danger: #ff8a8a;
+      --shadow: 0 18px 46px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(244, 162, 97, 0.18), transparent 32rem),
+        radial-gradient(circle at 88% 12%, rgba(255, 209, 102, 0.12), transparent 28rem),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      min-height: 72vh;
+      display: grid;
+      align-items: center;
+      padding: 52px 0 34px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-2);
+      background: rgba(26, 26, 29, 0.7);
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 18px 0 16px;
+      max-width: 880px;
+      font-size: clamp(2.45rem, 6vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 780px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1.08rem, 2vw, 1.35rem);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: rgba(34, 33, 38, 0.72);
+      font-weight: 700;
+    }
+
+    main {
+      display: grid;
+      gap: 26px;
+      padding-bottom: 60px;
+    }
+
+    section {
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: linear-gradient(180deg, rgba(34, 33, 38, 0.92), rgba(26, 26, 29, 0.96));
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      color: var(--accent);
+      font-size: clamp(1.55rem, 3vw, 2.2rem);
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 1.08rem;
+    }
+
+    p {
+      margin: 0 0 12px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .item {
+      min-height: 100%;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      background: rgba(17, 17, 19, 0.58);
+    }
+
+    .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      color: #1a1209;
+      background: var(--accent-2);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .example {
+      margin-top: 10px;
+      padding-left: 12px;
+      border-left: 3px solid var(--accent);
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+
+    .plugin-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .plugin {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 16px;
+      padding: 16px;
+      border: 1px solid rgba(244, 162, 97, 0.18);
+      border-radius: 8px;
+      background: rgba(17, 17, 19, 0.56);
+    }
+
+    .plugin strong {
+      color: var(--accent-2);
+    }
+
+    .do-dont {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 1.25rem;
+    }
+
+    li + li {
+      margin-top: 8px;
+    }
+
+    .do h3 {
+      color: var(--good);
+    }
+
+    .dont h3 {
+      color: var(--danger);
+    }
+
+    footer {
+      color: var(--muted);
+      padding: 18px 0 42px;
+      text-align: center;
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 820px) {
+      header {
+        min-height: auto;
+        padding-top: 34px;
+      }
+
+      section {
+        padding: 22px;
+      }
+
+      .two,
+      .three,
+      .do-dont {
+        grid-template-columns: 1fr;
+      }
+
+      .plugin {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell">
+    <div>
+      <div class="eyebrow">給老師的 AI 工作夥伴介紹</div>
+      <h1>我是 Claude，結合 Antigravity 後，可以陪你把教學工作變輕一點。</h1>
+      <p class="lead">
+        你可以把我想成一位會聽需求、會整理資料、會寫文字、會做網頁，也能在 Antigravity 裡協助修改檔案、執行指令、檢查成果的 AI 助教。
+      </p>
+      <div class="hero-actions" aria-label="重點能力">
+        <span class="pill">備課更快</span>
+        <span class="pill">教材更清楚</span>
+        <span class="pill">溝通更省力</span>
+        <span class="pill">作品可直接預覽</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section>
+      <h2>1. 我是誰？結合 Antigravity 後能做什麼？</h2>
+      <div class="grid two">
+        <div class="item">
+          <span class="tag">Claude</span>
+          <h3>擅長理解、整理與生成</h3>
+          <p>我可以把零散想法整理成可用的教案、講義、題目、通知文字、班級活動流程，也能依照學生程度調整語氣與難度。</p>
+        </div>
+        <div class="item">
+          <span class="tag">Antigravity</span>
+          <h3>讓 AI 真的進到工作現場</h3>
+          <p>在 Antigravity 裡，我不只回答問題，還能協助建立檔案、修改網頁、整理資料夾、執行本機指令，並幫你檢查成果能不能順利打開。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>2. 我能幫老師做哪些事？</h2>
+      <div class="grid three">
+        <div class="item">
+          <h3>出考卷與測驗</h3>
+          <p>依照單元、年級、難易度產生選擇題、填充題、問答題與答案解析。</p>
+          <div class="example">例：幫五年級自然「植物構造」出 20 題，其中 5 題要有生活情境。</div>
+        </div>
+        <div class="item">
+          <h3>改寫教材</h3>
+          <p>把艱深內容改成學生聽得懂的版本，或整理成重點表格。</p>
+          <div class="example">例：把課本段落改成三分鐘口頭講解稿，再附一張重點心智圖大綱。</div>
+        </div>
+        <div class="item">
+          <h3>製作學習單</h3>
+          <p>設計引導問題、活動步驟、檢核表與延伸任務。</p>
+          <div class="example">例：做一份國語課「人物特質分析」學習單，含例句與學生自評。</div>
+        </div>
+        <div class="item">
+          <h3>班級經營</h3>
+          <p>協助設計班規、獎勵制度、座位討論原則與衝突處理話術。</p>
+          <div class="example">例：幫我寫一套適合中年級的分組合作規則，語氣要溫和但明確。</div>
+        </div>
+        <div class="item">
+          <h3>家長聯絡</h3>
+          <p>把老師想表達的事情改寫成清楚、禮貌、避免誤會的訊息。</p>
+          <div class="example">例：寫一則通知家長孩子最近作業常缺交的訊息，不責備但要有提醒力。</div>
+        </div>
+        <div class="item">
+          <h3>差異化教學</h3>
+          <p>同一份內容可以改成基礎版、普通版、挑戰版，照顧不同程度學生。</p>
+          <div class="example">例：把數學分數應用題改成三種難度，每種各 5 題。</div>
+        </div>
+        <div class="item">
+          <h3>活動與課程設計</h3>
+          <p>幫忙規劃課堂流程、分組任務、討論題目、時間分配與收尾回饋。</p>
+          <div class="example">例：設計一堂 40 分鐘的防災教育課，包含暖身、任務、分享與評量。</div>
+        </div>
+        <div class="item">
+          <h3>簡報與網頁素材</h3>
+          <p>整理投影片架構、撰寫標題、製作簡單 HTML 展示頁或課堂小工具。</p>
+          <div class="example">例：做一個成語配對小遊戲網頁，深色背景、按鈕要大，適合投影操作。</div>
+        </div>
+        <div class="item">
+          <h3>行政文字與會議資料</h3>
+          <p>協助整理會議紀錄、活動企劃、公告、回饋表與成果報告。</p>
+          <div class="example">例：把校外教學流程整理成家長通知單與教師工作分配表。</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. 老師最該裝的 Antigravity 插件 / 擴充功能</h2>
+      <p>如果 Antigravity 使用 VS Code 相容的擴充功能，以下這些最適合教學現場，因為它們能讓「做教材、改網頁、整理文字、檢查成果」更順手。</p>
+      <div class="plugin-list">
+        <div class="plugin">
+          <strong>Live Server</strong>
+          <span>即時預覽 HTML 教材、小遊戲與班級網頁。老師修改檔案後重新整理瀏覽器，就能立刻看到成果。</span>
+        </div>
+        <div class="plugin">
+          <strong>Prettier</strong>
+          <span>自動排版 HTML、CSS、JavaScript，讓學生作品或老師教材的程式碼更整齊，方便教學示範。</span>
+        </div>
+        <div class="plugin">
+          <strong>Markdown All in One</strong>
+          <span>適合寫課程講義、閱讀筆記、班級公告草稿，能快速產生標題、清單與目錄。</span>
+        </div>
+        <div class="plugin">
+          <strong>Code Spell Checker</strong>
+          <span>檢查英文單字與常見拼字錯誤，製作雙語教材、英文學習單或網頁按鈕文字時很實用。</span>
+        </div>
+        <div class="plugin">
+          <strong>GitLens</strong>
+          <span>如果課堂作品會一版一版修改，它可以協助追蹤變更，知道哪次改了什麼，也比較容易回到前一版。</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. 怎麼跟我說話，才會得到最好的回答？</h2>
+      <div class="do-dont">
+        <div class="item do">
+          <h3>Do：這樣說更有效</h3>
+          <ul>
+            <li>說清楚對象：年級、科目、學生程度、使用情境。</li>
+            <li>給我格式：要表格、講稿、考卷、家長通知、HTML 網頁，都可以直接說。</li>
+            <li>給我限制：字數、時間、題數、難度、語氣、是否要附答案。</li>
+            <li>先給草稿也沒關係：我可以幫你修得更清楚、更友善、更有條理。</li>
+            <li>要求我檢查：請我找錯字、檢查題目難度、確認網頁能不能打開。</li>
+          </ul>
+        </div>
+        <div class="item dont">
+          <h3>Don't：避免這樣問</h3>
+          <ul>
+            <li>不要只說「幫我做教材」，最好補上科目、單元與學生年級。</li>
+            <li>不要一次塞太多不同任務，可以先完成一個版本，再請我調整。</li>
+            <li>不要假設我知道班上的特殊狀況，重要背景請直接告訴我。</li>
+            <li>不要把 AI 產出直接當最終答案，考題、通知與評量仍建議老師最後確認。</li>
+            <li>不要害怕改口，你可以說「再簡單一點」「更正式」「改成表格」。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="shell">
+    Claude + Antigravity：把老師的想法變成可用的教學材料、班級工具與課堂作品。
+  </footer>
+</body>
+</html>

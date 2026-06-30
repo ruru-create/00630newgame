@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>日式可愛打地鼠</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      font-family: "Kosugi Maru", "Microsoft JhengHei", system-ui, sans-serif;
+      color: #5a2e12;
+      background:
+        radial-gradient(circle at 12% 16%, rgba(255, 255, 255, 0.78) 0 32px, transparent 33px),
+        radial-gradient(circle at 86% 15%, rgba(255, 255, 255, 0.7) 0 24px, transparent 25px),
+        radial-gradient(circle at 25% 82%, rgba(255, 255, 255, 0.65) 0 28px, transparent 29px),
+        linear-gradient(135deg, rgba(255, 180, 67, 0.22) 25%, transparent 25%) 0 0 / 56px 56px,
+        linear-gradient(225deg, rgba(255, 180, 67, 0.18) 25%, transparent 25%) 0 0 / 56px 56px,
+        #ffe56c;
+      overflow-x: hidden;
+    }
+
+    body.shake {
+      animation: screenShake 0.28s ease-in-out;
+    }
+
+    .game {
+      position: relative;
+      width: min(780px, calc(100% - 28px));
+      padding: 24px;
+      border: 7px solid #fff8c7;
+      border-radius: 30px;
+      background: rgba(255, 246, 176, 0.92);
+      box-shadow: 0 24px 44px rgba(126, 75, 15, 0.26);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .game::before,
+    .game::after {
+      content: "✿";
+      position: absolute;
+      color: rgba(242, 94, 65, 0.28);
+      font-size: 5rem;
+      pointer-events: none;
+    }
+
+    .game::before {
+      left: 18px;
+      top: 10px;
+    }
+
+    .game::after {
+      right: 22px;
+      bottom: 4px;
+      rotate: 18deg;
+    }
+
+    h1 {
+      position: relative;
+      margin: 0 0 12px;
+      font-size: clamp(2.1rem, 7vw, 4.2rem);
+      line-height: 1;
+      letter-spacing: 0;
+      color: #8a3f15;
+      text-shadow: 0 4px 0 #fff3a7, 0 8px 0 rgba(210, 104, 26, 0.24);
+    }
+
+    .hud {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0 20px;
+      z-index: 1;
+    }
+
+    .stat,
+    button {
+      border: 0;
+      border-radius: 18px;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .stat {
+      padding: 11px 10px;
+      background: #fffaf0;
+      border: 3px solid #f3b54c;
+      box-shadow: inset 0 -5px 0 rgba(138, 63, 21, 0.13);
+    }
+
+    .stat span {
+      display: block;
+      margin-top: 2px;
+      color: #e34328;
+      font-size: 1.45rem;
+    }
+
+    .time-warn {
+      animation: redFlash 0.5s ease-in-out infinite alternate;
+    }
+
+    .combo-box {
+      min-height: 62px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(180deg, #ff6f61, #e34328);
+      border: 3px solid #fff7a8;
+      text-shadow: 0 2px 0 #9e2c1c;
+      opacity: 0.48;
+      transform: scale(0.96);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .combo-box.active {
+      opacity: 1;
+      transform: scale(1);
+      animation: comboBounce 0.45s ease;
+    }
+
+    button {
+      cursor: pointer;
+      color: #552506;
+      background: linear-gradient(180deg, #ffde59, #ffb43f);
+      border: 3px solid #fff7a8;
+      box-shadow: 0 7px 0 #c87519;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: saturate(1.08);
+      box-shadow: 0 9px 0 #c87519;
+    }
+
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 3px 0 #c87519;
+    }
+
+    button:disabled {
+      cursor: default;
+      opacity: 0.72;
+      transform: none;
+    }
+
+    #startBtn {
+      padding: 10px 12px;
+      min-height: 62px;
+    }
+
+    .board {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(12px, 3vw, 22px);
+      padding: clamp(14px, 3vw, 26px);
+      border: 5px solid #fff7a8;
+      border-radius: 26px;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.55) 0 12px, transparent 13px),
+        radial-gradient(circle at 80% 78%, rgba(255, 255, 255, 0.35) 0 16px, transparent 17px),
+        linear-gradient(180deg, #ffcf4a, #f4a62f);
+      box-shadow: inset 0 8px 0 rgba(255, 255, 255, 0.42);
+      z-index: 1;
+    }
+
+    .hole {
+      position: relative;
+      aspect-ratio: 1 / 0.84;
+      border: 0;
+      border-radius: 50%;
+      background:
+        radial-gradient(ellipse at 38% 32%, #3d1a08 0 8%, transparent 9%),
+        radial-gradient(ellipse at 62% 29%, #2f1206 0 7%, transparent 8%),
+        radial-gradient(ellipse at 25% 55%, #351606 0 9%, transparent 10%),
+        radial-gradient(ellipse at 73% 57%, #421c09 0 8%, transparent 9%),
+        radial-gradient(ellipse at 52% 71%, #321205 0 7%, transparent 8%),
+        radial-gradient(ellipse at 50% 59%, #1d0b04 0 29%, #7b3d18 30% 54%, #d89535 55% 69%, transparent 71%);
+      box-shadow: inset 0 -12px 0 rgba(87, 39, 10, 0.46), 0 8px 0 rgba(132, 67, 18, 0.18);
+      overflow: hidden;
+      padding: 0;
+      isolation: isolate;
+    }
+
+    .hole::before {
+      content: "";
+      position: absolute;
+      inset: 8% 9% 19%;
+      border-radius: 50%;
+      border: 5px solid rgba(255, 226, 100, 0.75);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .hole::after {
+      content: "";
+      position: absolute;
+      left: 13%;
+      right: 13%;
+      bottom: 12%;
+      height: 20%;
+      border-radius: 50%;
+      background: rgba(27, 12, 5, 0.28);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .mole {
+      position: absolute;
+      left: 50%;
+      bottom: 15%;
+      width: 66%;
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      font-size: clamp(2.2rem, 9vw, 4.5rem);
+      transform: translate(-50%, 112%) scale(0.74);
+      opacity: 0;
+      transition: transform 0.22s cubic-bezier(.16, 1.44, .32, 1), opacity 0.16s ease;
+      user-select: none;
+      pointer-events: none;
+      text-shadow: 0 5px 0 rgba(90, 48, 18, 0.16);
+      z-index: 3;
+    }
+
+    .hole.up .mole {
+      opacity: 1;
+      transform: translate(-50%, -2%) scale(1);
+      animation: moleBounce 0.44s cubic-bezier(.16, 1.44, .32, 1), wiggle 0.55s ease-in-out 0.44s infinite alternate;
+    }
+
+    .hole.hit .mole {
+      opacity: 0;
+      animation: flyAway 0.58s ease-out forwards;
+    }
+
+    .pop {
+      position: absolute;
+      inset: 7px;
+      display: grid;
+      place-items: start end;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(1.1rem, 4vw, 1.8rem);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      text-shadow: 0 3px 0 #9e2c1c;
+      z-index: 6;
+    }
+
+    .pop.minus {
+      color: #48311f;
+      text-shadow: 0 2px 0 #fff7a8;
+    }
+
+    .pop.show {
+      animation: floatScore 0.62s ease-out;
+    }
+
+    .particle {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--particle-color, #ff6f61);
+      pointer-events: none;
+      z-index: 20;
+      animation: particleFly 0.78s ease-out forwards;
+    }
+
+    .message {
+      position: relative;
+      min-height: 30px;
+      margin-top: 14px;
+      color: #6c3b19;
+      font-weight: 800;
+      z-index: 1;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(91, 45, 8, 0.42);
+      backdrop-filter: blur(5px);
+      z-index: 30;
+    }
+
+    .overlay.show {
+      display: grid;
+    }
+
+    .dialog {
+      width: min(420px, 100%);
+      padding: 28px;
+      border: 7px solid #fff7a8;
+      border-radius: 30px;
+      background: #fffaf0;
+      box-shadow: 0 22px 50px rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+
+    .dialog h2 {
+      margin: 0 0 10px;
+      color: #8a3f15;
+      font-size: 2.1rem;
+    }
+
+    .final-score {
+      margin: 8px 0 20px;
+      color: #e34328;
+      font-size: 3rem;
+      font-weight: 900;
+    }
+
+    #restartBtn {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1.2rem;
+    }
+
+    @keyframes moleBounce {
+      0% {
+        transform: translate(-50%, 112%) scale(0.74);
+      }
+      68% {
+        transform: translate(-50%, -18%) scale(1.12);
+      }
+      100% {
+        transform: translate(-50%, -2%) scale(1);
+      }
+    }
+
+    @keyframes flyAway {
+      0% {
+        transform: translate(-50%, -2%) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(42%, -155%) rotate(690deg) scale(0.45);
+        opacity: 0;
+      }
+    }
+
+    @keyframes wiggle {
+      from {
+        rotate: -3deg;
+      }
+      to {
+        rotate: 3deg;
+      }
+    }
+
+    @keyframes floatScore {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.78);
+      }
+      18% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-36px) scale(1.2);
+      }
+    }
+
+    @keyframes particleFly {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) rotate(260deg) scale(0.25);
+      }
+    }
+
+    @keyframes screenShake {
+      0%, 100% { transform: translate(0, 0); }
+      20% { transform: translate(-5px, 3px); }
+      40% { transform: translate(5px, -2px); }
+      60% { transform: translate(-3px, -2px); }
+      80% { transform: translate(4px, 2px); }
+    }
+
+    @keyframes redFlash {
+      from {
+        background: #fffaf0;
+        color: #5a2e12;
+      }
+      to {
+        background: #ff4f4f;
+        color: #fff;
+        box-shadow: 0 0 18px rgba(255, 66, 66, 0.7);
+      }
+    }
+
+    @keyframes comboBounce {
+      0%, 100% {
+        transform: scale(1);
+      }
+      48% {
+        transform: scale(1.12) rotate(-2deg);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .game {
+        padding: 16px;
+        border-radius: 22px;
+      }
+
+      .hud {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat,
+      #startBtn,
+      .combo-box {
+        min-height: 54px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="game" aria-label="打地鼠遊戲">
+    <h1>打地鼠</h1>
+    <div class="hud">
+      <div class="stat">分數<span id="score">0</span></div>
+      <div class="stat" id="timeBox">倒數<span id="time">30</span></div>
+      <div class="stat combo-box" id="comboBox">COMBO ×0</div>
+      <button id="startBtn" type="button">開始遊戲</button>
+    </div>
+
+    <div class="board" id="board" aria-label="九宮格地鼠洞"></div>
+    <div class="message" id="message">按下開始，看到 🐹 就快點點牠！</div>
+  </main>
+
+  <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+    <div class="dialog">
+      <h2 id="resultTitle">時間到！</h2>
+      <p>你的最終分數是</p>
+      <div class="final-score" id="finalScore">0</div>
+      <button id="restartBtn" type="button">重新開始</button>
+    </div>
+  </div>
+
+  <script>
+    const board = document.querySelector("#board");
+    const scoreEl = document.querySelector("#score");
+    const timeEl = document.querySelector("#time");
+    const timeBox = document.querySelector("#timeBox");
+    const comboBox = document.querySelector("#comboBox");
+    const messageEl = document.querySelector("#message");
+    const startBtn = document.querySelector("#startBtn");
+    const overlay = document.querySelector("#overlay");
+    const finalScoreEl = document.querySelector("#finalScore");
+    const restartBtn = document.querySelector("#restartBtn");
+
+    const GAME_SECONDS = 30;
+    const MOLE_VISIBLE_MS = 1500;
+    const SPAWN_GAP_MS = 900;
+    const holes = [];
+
+    let score = 0;
+    let combo = 0;
+    let timeLeft = GAME_SECONDS;
+    let activeHole = null;
+    let gameRunning = false;
+    let countdownTimer = null;
+    let moleTimer = null;
+    let spawnTimer = null;
+    let audioContext = null;
+
+    for (let i = 0; i < 9; i += 1) {
+      const hole = document.createElement("button");
+      hole.className = "hole";
+      hole.type = "button";
+      hole.setAttribute("aria-label", `第 ${i + 1} 個洞`);
+      hole.innerHTML = '<span class="mole" aria-hidden="true">🐹</span><span class="pop" aria-hidden="true"></span>';
+      hole.addEventListener("click", () => handleHoleClick(hole));
+      board.appendChild(hole);
+      holes.push(hole);
+    }
+
+    function ensureAudio() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+    }
+
+    function tone(freq, duration, type, volume, delay = 0) {
+      if (!audioContext) return;
+      const now = audioContext.currentTime + delay;
+      const osc = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(volume, now + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+      osc.connect(gain);
+      gain.connect(audioContext.destination);
+      osc.start(now);
+      osc.stop(now + duration + 0.02);
+    }
+
+    function playPopSound() {
+      tone(420, 0.08, "sine", 0.09);
+      tone(760, 0.13, "triangle", 0.08, 0.04);
+    }
+
+    function playHitSound() {
+      tone(160, 0.08, "square", 0.12);
+      tone(92, 0.12, "sawtooth", 0.08, 0.04);
+      tone(880, 0.08, "triangle", 0.06, 0.06);
+    }
+
+    function playOopsSound() {
+      tone(310, 0.1, "sine", 0.08);
+      tone(180, 0.18, "triangle", 0.07, 0.08);
+    }
+
+    function playTickSound() {
+      tone(1200, 0.05, "square", 0.045);
+    }
+
+    function startGame() {
+      ensureAudio();
+      resetGame();
+      gameRunning = true;
+      startBtn.disabled = true;
+      startBtn.textContent = "遊戲中";
+      messageEl.textContent = "地鼠冒出來 1.5 秒，點空洞會扣 5 分喔！";
+      overlay.classList.remove("show");
+      spawnMole();
+
+      countdownTimer = setInterval(() => {
+        timeLeft -= 1;
+        timeEl.textContent = timeLeft;
+        if (timeLeft <= 5 && timeLeft > 0) {
+          timeBox.classList.add("time-warn");
+          playTickSound();
+        }
+        if (timeLeft <= 0) {
+          endGame();
+        }
+      }, 1000);
+    }
+
+    function resetGame() {
+      clearTimers();
+      score = 0;
+      combo = 0;
+      timeLeft = GAME_SECONDS;
+      activeHole = null;
+      scoreEl.textContent = score;
+      timeEl.textContent = timeLeft;
+      updateCombo();
+      timeBox.classList.remove("time-warn");
+      holes.forEach((hole) => {
+        hole.classList.remove("up", "hit");
+        const pop = hole.querySelector(".pop");
+        pop.className = "pop";
+      });
+    }
+
+    function clearTimers() {
+      clearInterval(countdownTimer);
+      clearTimeout(moleTimer);
+      clearTimeout(spawnTimer);
+    }
+
+    function spawnMole() {
+      if (!gameRunning) return;
+      hideMole();
+
+      const nextHole = holes[Math.floor(Math.random() * holes.length)];
+      activeHole = nextHole;
+      nextHole.classList.remove("hit");
+      nextHole.classList.add("up");
+      playPopSound();
+
+      moleTimer = setTimeout(() => {
+        hideMole();
+        combo = 0;
+        updateCombo();
+        scheduleNextMole();
+      }, MOLE_VISIBLE_MS);
+    }
+
+    function scheduleNextMole() {
+      if (!gameRunning) return;
+      clearTimeout(spawnTimer);
+      spawnTimer = setTimeout(spawnMole, SPAWN_GAP_MS);
+    }
+
+    function hideMole() {
+      holes.forEach((hole) => hole.classList.remove("up", "hit"));
+      activeHole = null;
+    }
+
+    function handleHoleClick(hole) {
+      if (!gameRunning) return;
+
+      if (hole === activeHole && hole.classList.contains("up")) {
+        score += 10;
+        combo += 1;
+        scoreEl.textContent = score;
+        showPop(hole, "+10", false);
+        burstParticles(hole, combo >= 3);
+        playHitSound();
+        hole.classList.add("hit");
+        hole.classList.remove("up");
+        clearTimeout(moleTimer);
+        activeHole = null;
+        messageEl.textContent = combo >= 3 ? `COMBO ×${combo}! 太可愛的連擊！` : "打中了！+10 分";
+        updateCombo(true);
+        scheduleNextMole();
+      } else {
+        score -= 5;
+        combo = 0;
+        scoreEl.textContent = score;
+        showPop(hole, "-5", true);
+        playOopsSound();
+        shakeScreen();
+        updateCombo();
+        messageEl.textContent = "哎呀，點到空洞，-5 分";
+      }
+    }
+
+    function showPop(hole, text, isMinus) {
+      const pop = hole.querySelector(".pop");
+      pop.textContent = text;
+      pop.className = isMinus ? "pop minus" : "pop";
+      void pop.offsetWidth;
+      pop.classList.add("show");
+    }
+
+    function updateCombo(pulse = false) {
+      comboBox.textContent = combo >= 3 ? `COMBO ×${combo}!` : "COMBO ×0";
+      comboBox.classList.toggle("active", combo >= 3);
+      if (pulse && combo >= 3) {
+        comboBox.classList.remove("active");
+        void comboBox.offsetWidth;
+        comboBox.classList.add("active");
+        sparkleCombo();
+      }
+    }
+
+    function shakeScreen() {
+      document.body.classList.remove("shake");
+      void document.body.offsetWidth;
+      document.body.classList.add("shake");
+    }
+
+    function burstParticles(hole, isCombo) {
+      const rect = hole.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const total = isCombo ? 24 : 14;
+      const colors = ["#ff6f61", "#fff176", "#ffb43f", "#ffffff", "#f06292"];
+
+      for (let i = 0; i < total; i += 1) {
+        const particle = document.createElement("span");
+        const angle = (Math.PI * 2 * i) / total;
+        const distance = isCombo ? 96 + Math.random() * 58 : 58 + Math.random() * 34;
+        particle.className = "particle";
+        particle.style.left = `${centerX}px`;
+        particle.style.top = `${centerY}px`;
+        particle.style.setProperty("--tx", `${Math.cos(angle) * distance}px`);
+        particle.style.setProperty("--ty", `${Math.sin(angle) * distance - 20}px`);
+        particle.style.setProperty("--particle-color", colors[i % colors.length]);
+        document.body.appendChild(particle);
+        particle.addEventListener("animationend", () => particle.remove(), { once: true });
+      }
+    }
+
+    function sparkleCombo() {
+      const rect = comboBox.getBoundingClientRect();
+      for (let i = 0; i < 12; i += 1) {
+        const particle = document.createElement("span");
+        particle.className = "particle";
+        particle.style.left = `${rect.left + Math.random() * rect.width}px`;
+        particle.style.top = `${rect.top + Math.random() * rect.height}px`;
+        particle.style.setProperty("--tx", `${(Math.random() - 0.5) * 120}px`);
+        particle.style.setProperty("--ty", `${-40 - Math.random() * 80}px`);
+        particle.style.setProperty("--particle-color", i % 2 ? "#fff176" : "#ff6f61");
+        document.body.appendChild(particle);
+        particle.addEventListener("animationend", () => particle.remove(), { once: true });
+      }
+    }
+
+    function endGame() {
+      gameRunning = false;
+      clearTimers();
+      hideMole();
+      timeBox.classList.remove("time-warn");
+      startBtn.disabled = false;
+      startBtn.textContent = "再玩一次";
+      messageEl.textContent = "時間到！按重新開始再挑戰一次。";
+      finalScoreEl.textContent = score;
+      overlay.classList.add("show");
+    }
+
+    startBtn.addEventListener("click", startGame);
+    restartBtn.addEventListener("click", startGame);
+  </script>
+</body>
+</html>
